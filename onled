@@ -1,0 +1,21 @@
+from machine import Pin
+from time import sleep
+led_red = Pin(15,Pin.OUT)
+led_green = Pin(13,Pin.OUT)
+led_red.value(0)
+led_green.value(0)
+
+
+while True:
+  led_red.on()
+  sleep(1)
+  led_red.off()
+  sleep(.1)
+  led_green.on()
+  sleep(1)
+  led_green.off()
+  sleep(.1)
+  
+  
+  
+    
