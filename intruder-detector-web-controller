@@ -1,0 +1,85 @@
+import network
+import socket
+from machine import Pin
+from time import sleep
+
+# Wi-Fi credentials
+ssid = 'Nordic Hotel Lagos'
+password = 'Nordic.21.Oslo'
+
+# Initialize PIR sensor and LEDs
+pir = Pin(14, Pin.IN, Pin.PULL_DOWN)
+led_red = Pin(15, Pin.OUT)
+led_green = Pin(13, Pin.OUT)
+led_red.value(0)
+led_green.value(0)
+
+# Connect to Wi-Fi
+def connect_to_wifi():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(ssid, password)
+    while not wlan.isconnected():
+        pass
+    print('Connected to WiFi:', wlan.ifconfig())
+
+# Start a simple HTTP server
+def start_server():
+    addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+    s = socket.socket()
+    s.bind(addr)
+    s.listen(1)
+    print('Listening on', addr)
+
+    while True:
+        cl, addr = s.accept()
+        print('Client connected from', addr)
+        request = cl.recv(1024)
+        request = str(request)
+        print('Content = %s' % request)
+        
+        if '/red_led/on' in request:
+            led_red.on()
+        elif '/red_led/off' in request:
+            led_red.off()
+        elif '/motion_status' in request:
+            motion_status = "Yes" if pir.value() else "No"
+            cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n')
+            cl.send(motion_status)
+            cl.close()
+            continue
+        
+        response = html
+        cl.send('HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n')
+        cl.send(response)
+        cl.close()
+
+# HTML to send to browsers
+html = """<!DOCTYPE html>
+<html>
+    <head>
+        <title>Raspberry Pi Pico W</title>
+    </head>
+    <body>
+        <h1>Intruder Detector</h1>
+        <p>Motion detected: <span id="motion_status">No</span></p>
+        <button onclick="fetch('/red_led/on')">Turn On Red LED</button>
+        <button onclick="fetch('/red_led/off')">Turn Off Red LED</button>
+        <script>
+            setInterval(() => {
+                fetch('/motion_status')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('motion_status').innerText = data;
+                });
+            }, 1000);
+        </script>
+    </body>
+</html>
+"""
+
+# Connect to Wi-Fi and start the server
+connect_to_wifi()
+start_server()
+
+
