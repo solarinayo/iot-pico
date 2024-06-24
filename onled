@@ -5,6 +5,7 @@ led_green = Pin(13,Pin.OUT)
 led_red.value(0)
 led_green.value(0)
 
+#on lead
 
 while True:
   led_red.on()
